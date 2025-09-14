@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "1020671239792",
+    "firebase_url": "https://vossa4tefa-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "vossa4tefa",
+    "storage_bucket": "vossa4tefa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020671239792:android:748fa31f34fb84409f76b5",
+        "android_client_info": {
+          "package_name": "com.example.macos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBokvn8siwW11KOxqc3bWb6-M_zRZbWEao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020671239792:android:b29448c94eb79ca59f76b5",
+        "android_client_info": {
+          "package_name": "com.example.soft_skills_tefa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBokvn8siwW11KOxqc3bWb6-M_zRZbWEao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

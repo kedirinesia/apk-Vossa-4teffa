@@ -1,55 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'pages/cover_page.dart';
 import 'pages/observer_form_page.dart';
-import 'pages/instrument_selection_page.dart';
+import 'pages/Instrument_selection_page.dart';
 import 'pages/student_form_page.dart';
 import 'pages/assessment_page.dart';
+import 'pages/result_page.dart';
 import 'models/observer_data.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const SoftSkillsApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SoftSkillsApp extends StatelessWidget {
+  const SoftSkillsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Soft Skills Assessment',
+      title: 'Aplikasi Penilaian Soft Skills TeFa',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        useMaterial3: true,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      home: const CoverPage(),
       routes: {
-        '/': (context) => const CoverPage(),
         '/observerForm': (context) => const ObserverFormPage(),
-        '/instrumentSelection': (context) {
-          final observerData = ModalRoute.of(context)!.settings.arguments as ObserverData;
-          return InstrumentSelectionPage(observerData: observerData);
-        },
-        '/studentForm': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return StudentFormPage(
-            observerData: args['observerData'],
-            instrumentType: args['instrumentType'],
-          );
-        },
-        '/assessment': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return AssessmentPage(
-            students: args['students'],
-            instrumentType: args['instrumentType'],
-            classLevel: args['classLevel'],
-            programKeahlian: args['programKeahlian'],
-            observerData: args['observerData'],
-          );
-        },
+      },
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/instrumentSelection':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => InstrumentSelectionPage(
+                observerData: args['observerData'] as ObserverData,
+              ),
+            );
+          case '/studentForm':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => StudentFormPage(
+                observerData: args['observerData'] as ObserverData,
+                instrumentType: args['instrumentType'] as String,
+              ),
+            );
+          case '/assessment':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => AssessmentPage(
+                students: args['students'] as List<String>,
+                instrumentType: args['instrumentType'] as String,
+                classLevel: args['classLevel'] as String,
+                programKeahlian: args['programKeahlian'] as String,
+                observerData: args['observerData'] as ObserverData,
+              ),
+            );
+          case '/result':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => ResultPage(
+                studentScores: args['studentScores'] as Map<String, Map<String, double>>,
+                observerData: args['observerData'] as ObserverData?,
+                instrumentType: args['instrumentType'] as String?,
+                classLevel: args['classLevel'] as String?,
+                programKeahlian: args['programKeahlian'] as String?,
+                students: args['students'] as List<String>?,
+                answers: args['answers'] as Map<String, Map<String, String>>?,
+              ),
+            );
+          default:
+            return MaterialPageRoute(
+              builder: (context) => const CoverPage(),
+            );
+        }
       },
     );
   }

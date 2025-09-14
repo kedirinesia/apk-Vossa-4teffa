@@ -1,20 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../services/firebase_service.dart';
+import '../models/observer_data.dart';
 
-class ResultPage extends StatelessWidget {
+class ResultPage extends StatefulWidget {
   final Map<String, Map<String, double>> studentScores;
+  final ObserverData? observerData;
+  final String? instrumentType;
+  final String? classLevel;
+  final String? programKeahlian;
+  final List<String>? students;
+  final Map<String, Map<String, String>>? answers;
 
-  const ResultPage({super.key, required this.studentScores});
+  const ResultPage({
+    super.key, 
+    required this.studentScores,
+    this.observerData,
+    this.instrumentType,
+    this.classLevel,
+    this.programKeahlian,
+    this.students,
+    this.answers,
+  });
+
+  @override
+  State<ResultPage> createState() => _ResultPageState();
+}
+
+class _ResultPageState extends State<ResultPage> {
+  bool _isSaving = false;
+  bool _isSaved = false;
+
+  Future<void> _saveToFirebase() async {
+    if (widget.observerData == null || 
+        widget.instrumentType == null || 
+        widget.students == null || 
+        widget.answers == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data tidak lengkap untuk disimpan')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      await FirebaseService.saveAssessmentData(
+        observerData: widget.observerData!,
+        instrumentType: widget.instrumentType!,
+        classLevel: widget.classLevel ?? '',
+        programKeahlian: widget.programKeahlian ?? '',
+        students: widget.students!,
+        answers: widget.answers!,
+        studentScores: widget.studentScores,
+      );
+
+      setState(() {
+        _isSaved = true;
+        _isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Data berhasil disimpan ke Firebase!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error menyimpan data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final students = studentScores.keys.toList();
+    final students = widget.studentScores.keys.toList();
     final pages = (students.length / 12).ceil();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hasil Penilaian Soft Skills'),
         backgroundColor: Colors.blueAccent,
+        actions: [
+          if (!_isSaved)
+            IconButton(
+              onPressed: _isSaving ? null : _saveToFirebase,
+              icon: _isSaving 
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save),
+              tooltip: 'Simpan ke Firebase',
+            ),
+          if (_isSaved)
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+            ),
+        ],
       ),
       body: PageView.builder(
         itemCount: pages,

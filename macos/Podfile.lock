@@ -1,91 +1,23 @@
 PODS:
-  - Firebase/CoreOnly (11.15.0):
-    - FirebaseCore (~> 11.15.0)
-  - Firebase/Storage (11.15.0):
-    - Firebase/CoreOnly
-    - FirebaseStorage (~> 11.15.0)
-  - firebase_core (3.15.2):
-    - Firebase/CoreOnly (~> 11.15.0)
-    - FlutterMacOS
-  - firebase_storage (12.4.10):
-    - Firebase/CoreOnly (~> 11.15.0)
-    - Firebase/Storage (~> 11.15.0)
-    - firebase_core
-    - FlutterMacOS
-  - FirebaseAppCheckInterop (11.15.0)
-  - FirebaseAuthInterop (11.15.0)
-  - FirebaseCore (11.15.0):
-    - FirebaseCoreInternal (~> 11.15.0)
-    - GoogleUtilities/Environment (~> 8.1)
-    - GoogleUtilities/Logger (~> 8.1)
-  - FirebaseCoreExtension (11.15.0):
-    - FirebaseCore (~> 11.15.0)
-  - FirebaseCoreInternal (11.15.0):
-    - "GoogleUtilities/NSData+zlib (~> 8.1)"
-  - FirebaseStorage (11.15.0):
-    - FirebaseAppCheckInterop (~> 11.0)
-    - FirebaseAuthInterop (~> 11.0)
-    - FirebaseCore (~> 11.15.0)
-    - FirebaseCoreExtension (~> 11.15.0)
-    - GoogleUtilities/Environment (~> 8.1)
-    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
   - FlutterMacOS (1.0.0)
-  - GoogleUtilities/Environment (8.1.0):
-    - GoogleUtilities/Privacy
-  - GoogleUtilities/Logger (8.1.0):
-    - GoogleUtilities/Environment
-    - GoogleUtilities/Privacy
-  - "GoogleUtilities/NSData+zlib (8.1.0)":
-    - GoogleUtilities/Privacy
-  - GoogleUtilities/Privacy (8.1.0)
-  - GTMSessionFetcher/Core (4.5.0)
-  - path_provider_foundation (0.0.1):
-    - Flutter
-    - FlutterMacOS
+  - leveldb-library (1.22)
 
 DEPENDENCIES:
-  - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
-  - firebase_storage (from `Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - leveldb-library (= 1.22)
 
 SPEC REPOS:
   trunk:
-    - Firebase
-    - FirebaseAppCheckInterop
-    - FirebaseAuthInterop
-    - FirebaseCore
-    - FirebaseCoreExtension
-    - FirebaseCoreInternal
-    - FirebaseStorage
-    - GoogleUtilities
-    - GTMSessionFetcher
+    - leveldb-library
 
 EXTERNAL SOURCES:
-  firebase_core:
-    :path: Flutter/ephemeral/.symlinks/plugins/firebase_core/macos
-  firebase_storage:
-    :path: Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
-  path_provider_foundation:
-    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
 
 SPEC CHECKSUMS:
-  Firebase: d99ac19b909cd2c548339c2241ecd0d1599ab02e
-  firebase_core: 7667f880631ae8ad10e3d6567ab7582fe0682326
-  firebase_storage: de55edba0e3b9e680fe3d48b94007aa8aedc6b29
-  FirebaseAppCheckInterop: 06fe5a3799278ae4667e6c432edd86b1030fa3df
-  FirebaseAuthInterop: 7087d7a4ee4bc4de019b2d0c240974ed5d89e2fd
-  FirebaseCore: efb3893e5b94f32b86e331e3bd6dadf18b66568e
-  FirebaseCoreExtension: edbd30474b5ccf04e5f001470bdf6ea616af2435
-  FirebaseCoreInternal: 9afa45b1159304c963da48addb78275ef701c6b4
-  FirebaseStorage: 50fc9ee147392943e492467db6b52759b0447037
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
-  GTMSessionFetcher: fc75fc972958dceedee61cb662ae1da7a83a91cf
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
 
-PODFILE CHECKSUM: ebcae7601efc49e805bafadfacd9618ba97c707c
+PODFILE CHECKSUM: efe3deac792c97c63ddbb256246e8506660eb77c
 
 COCOAPODS: 1.16.2

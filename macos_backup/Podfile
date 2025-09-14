@@ -1,0 +1,9 @@
+platform :osx, '11.0'
+
+use_frameworks!
+use_modular_headers!
+
+target 'Runner' do
+
+end
+
