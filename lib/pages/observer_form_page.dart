@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/observer_data.dart';
 import 'instrument_selection_page.dart';
 
@@ -16,6 +17,29 @@ class _ObserverFormPageState extends State<ObserverFormPage> {
   final TextEditingController _schoolNameController = TextEditingController();
   final TextEditingController _mitraNameController = TextEditingController();
   String _role = 'guru';
+
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Logout berhasil'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error logout: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +177,52 @@ class _ObserverFormPageState extends State<ObserverFormPage> {
                           ],
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tombol Logout
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Konfirmasi Logout'),
+                          content: const Text('Apakah Anda yakin ingin logout?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Batal'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                _logout();
+                              },
+                              child: const Text(
+                                'Logout',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.logout, color: Colors.red),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),

@@ -21,6 +21,14 @@ dependencies:
   firebase_auth: ^5.7.0        # opsional: login
   cloud_firestore: ^5.4.0      # opsional: database
   firebase_storage: ^12.3.0    # opsional: simpan file (pdf, excel, dll)
+  google_sign_in: ^6.2.1       # Google Sign-In
+  
+  # 📊 Export Excel & PDF
+  excel: ^4.0.6
+  pdf: ^3.10.7
+  path_provider: ^2.1.2
+  open_file: ^3.3.2
+  share_plus: ^10.0.2
 
 dev_dependencies:
   flutter_test:

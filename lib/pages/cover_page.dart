@@ -60,8 +60,8 @@ class CoverPage extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () {
-                // Langsung ke halaman identitas observer tanpa login
-                Navigator.pushNamed(context, '/observerForm');
+                // Ke halaman login terlebih dahulu
+                Navigator.pushNamed(context, '/login');
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,

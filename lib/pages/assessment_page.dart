@@ -134,19 +134,60 @@ class _AssessmentPageState extends State<AssessmentPage> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  debugPrint('=== Hasil Penilaian ===');
-                  for (var s in students) {
-                    debugPrint('Siswa: $s');
-                    answers[s]!.forEach((ind, val) {
-                      debugPrint('  $ind => ${val.isEmpty ? "-" : val}');
-                    });
+                  // Hitung skor untuk setiap siswa
+                  final Map<String, Map<String, double>> studentScores = {};
+                  
+                  for (var student in students) {
+                    studentScores[student] = {};
+                    final studentAnswers = answers[student]!;
+                    
+                    // Hitung skor berdasarkan jawaban
+                    for (var entry in studentAnswers.entries) {
+                      final key = entry.key;
+                      final answer = entry.value;
+                      
+                      // Konversi jawaban ke skor numerik
+                      double score = 0;
+                      switch (answer) {
+                        case 'Sangat Kurang':
+                          score = 1;
+                          break;
+                        case 'Kurang':
+                          score = 2;
+                          break;
+                        case 'Cukup':
+                          score = 3;
+                          break;
+                        case 'Baik':
+                          score = 4;
+                          break;
+                        case 'Sangat Baik':
+                          score = 5;
+                          break;
+                        default:
+                          score = 0;
+                      }
+                      
+                      studentScores[student]![key] = score;
+                    }
                   }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Data penilaian disimpan (sementara).')),
+                  
+                  // Navigate ke halaman result
+                  Navigator.pushNamed(
+                    context,
+                    '/result',
+                    arguments: {
+                      'observerData': widget.observerData,
+                      'instrumentType': widget.instrumentType,
+                      'classLevel': widget.classLevel,
+                      'programKeahlian': widget.programKeahlian,
+                      'students': students,
+                      'answers': answers,
+                      'studentScores': studentScores,
+                    },
                   );
                 },
-                child: const Text('Simpan Penilaian'),
+                child: const Text('Selanjutnya'),
               ),
             ),
           ],

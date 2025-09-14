@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'pages/auth_wrapper.dart';
 import 'pages/cover_page.dart';
+import 'pages/login_page.dart';
+import 'pages/signup_page.dart';
+import 'pages/otp_verification_page.dart';
 import 'pages/observer_form_page.dart';
 import 'pages/Instrument_selection_page.dart';
 import 'pages/student_form_page.dart';
 import 'pages/assessment_page.dart';
 import 'pages/result_page.dart';
+import 'pages/student_detail_page.dart';
+import 'pages/class_summary_page.dart';
+import 'pages/finish_page.dart';
 import 'models/observer_data.dart';
 
 void main() async {
@@ -28,12 +35,22 @@ class SoftSkillsApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const CoverPage(),
+      home: const AuthWrapper(),
       routes: {
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
         '/observerForm': (context) => const ObserverFormPage(),
       },
       onGenerateRoute: (settings) {
         switch (settings.name) {
+          case '/otp-verification':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => OtpVerificationPage(
+                verificationId: args['verificationId'] as String,
+                phoneNumber: args['phoneNumber'] as String,
+              ),
+            );
           case '/instrumentSelection':
             final args = settings.arguments as Map<String, dynamic>;
             return MaterialPageRoute(
@@ -71,6 +88,29 @@ class SoftSkillsApp extends StatelessWidget {
                 programKeahlian: args['programKeahlian'] as String?,
                 students: args['students'] as List<String>?,
                 answers: args['answers'] as Map<String, Map<String, String>>?,
+              ),
+            );
+          case '/student-detail':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => StudentDetailPage(
+                studentName: args['studentName'] as String,
+                studentScores: args['studentScores'] as Map<String, double>,
+              ),
+            );
+          case '/class-summary':
+            final studentScores = settings.arguments as Map<String, Map<String, double>>;
+            return MaterialPageRoute(
+              builder: (context) => ClassSummaryPage(
+                studentScores: studentScores,
+              ),
+            );
+          case '/finish':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => FinishPage(
+                studentScores: args['studentScores'] as List<StudentScore>,
+                aspects: args['aspects'] as List<String>,
               ),
             );
           default:

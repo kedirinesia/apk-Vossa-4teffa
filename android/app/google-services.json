@@ -8,12 +8,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1020671239792:android:b29448c94eb79ca59f76b5",
+        "mobilesdk_app_id": "1:1020671239792:android:748fa31f34fb84409f76b5",
         "android_client_info": {
-          "package_name": "com.example.soft_skills_tefa"
+          "package_name": "com.example.macos"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1020671239792-k0ngaa8kaansq15jfh2p719cku4a8nbh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBokvn8siwW11KOxqc3bWb6-M_zRZbWEao"
@@ -21,7 +26,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1020671239792-k0ngaa8kaansq15jfh2p719cku4a8nbh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1020671239792-j75o0imhrinm79b0p0gvrqfd7vjdghqa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.softSkillsTefa"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020671239792:android:b29448c94eb79ca59f76b5",
+        "android_client_info": {
+          "package_name": "com.example.soft_skills_tefa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1020671239792-tob23j9ecohadv7not6m4l6pjntsddcf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.soft_skills_tefa",
+            "certificate_hash": "d689cd2676d83a76a7b5e3a4ec759841310c2345"
+          }
+        },
+        {
+          "client_id": "1020671239792-k0ngaa8kaansq15jfh2p719cku4a8nbh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBokvn8siwW11KOxqc3bWb6-M_zRZbWEao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1020671239792-k0ngaa8kaansq15jfh2p719cku4a8nbh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1020671239792-j75o0imhrinm79b0p0gvrqfd7vjdghqa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.softSkillsTefa"
+              }
+            }
+          ]
         }
       }
     }
