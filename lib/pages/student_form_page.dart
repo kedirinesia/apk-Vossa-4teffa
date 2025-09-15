@@ -100,12 +100,17 @@ class _StudentFormPageState extends State<StudentFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Deteksi apakah keyboard sedang terbuka
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardOpen = keyboardHeight > 0;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Input Data Siswa'),
         backgroundColor: Colors.blue.shade700,
       ),
       backgroundColor: const Color(0xFFE3F2FD),
+      resizeToAvoidBottomInset: false, // Mencegah scaffold resize saat keyboard muncul
       body: Stack(
         children: [
           Padding(
@@ -177,19 +182,20 @@ class _StudentFormPageState extends State<StudentFormPage> {
             ),
           ),
 
-          // Gambar kecil di posisi bottom center
-          Positioned(
-            bottom: 8,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Image.asset(
-                'assets/images/vossa4tefa.png',
-                height: 80,
-                fit: BoxFit.contain,
+          // Gambar kecil di posisi bottom center - disembunyikan saat keyboard muncul
+          if (!isKeyboardOpen)
+            Positioned(
+              bottom: 8,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Image.asset(
+                  'assets/images/vossa4tefa.png',
+                  height: 80,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

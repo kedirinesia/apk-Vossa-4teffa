@@ -50,7 +50,10 @@ class _ObserverFormPageState extends State<ObserverFormPage> {
         backgroundColor: Colors.blue.shade700,
         elevation: 4,
       ),
-      body: SafeArea(
+      resizeToAvoidBottomInset: false, // Mencegah scaffold resize saat keyboard muncul
+      body: Stack(
+        children: [
+          SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
@@ -184,63 +187,75 @@ class _ObserverFormPageState extends State<ObserverFormPage> {
 
               const SizedBox(height: 20),
 
-              // Tombol Logout
-              Center(
-                child: TextButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Konfirmasi Logout'),
-                          content: const Text('Apakah Anda yakin ingin logout?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Batal'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                _logout();
-                              },
-                              child: const Text(
-                                'Logout',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.logout, color: Colors.red),
-                  label: const Text(
-                    'Logout',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Gambar kecil di bawah halaman
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 8),
-                child: Image.asset(
-                  'assets/images/vossa4tefa.png',
-                  height: 60,
-                  fit: BoxFit.contain,
-                ),
-              ),
             ],
           ),
         ),
       ),
-    );
+      
+      // Tombol Logout di posisi fixed - tidak ikut terbang
+      Positioned(
+        bottom: 70, // Posisi di atas logo VOSSA 4TEFA
+        left: 0,
+        right: 0,
+        child: Center(
+          child: TextButton.icon(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Konfirmasi Logout'),
+                    content: const Text('Apakah Anda yakin ingin logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Batal'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _logout();
+                        },
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.logout, color: Colors.red),
+            label: const Text(
+              'Logout',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+      
+      // Banner VOSSA 4TEFA di posisi fixed di bawah - tetap diam
+      Positioned(
+        bottom: 8, // Posisi tetap di bawah, tidak mengikuti keyboard
+        left: 0,
+        right: 0,
+        child: Center(
+          child: Image.asset(
+            'assets/images/vossa4tefa.png',
+            height: 50,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    ],
+  ),
+);
   }
 }

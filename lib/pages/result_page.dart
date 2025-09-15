@@ -1,164 +1,210 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../services/firebase_service.dart';
+import '../models/student.dart';
 import '../models/observer_data.dart';
+import 'class_summary_page.dart';
+import 'student_detail_page.dart';
 
 class ResultPage extends StatefulWidget {
-  final Map<String, Map<String, double>> studentScores;
+  final List<Student> students;
   final ObserverData? observerData;
-  final String? instrumentType;
+  final Map<String, Map<String, double>> studentScores;
   final String? classLevel;
   final String? programKeahlian;
-  final List<String>? students;
-  final Map<String, Map<String, String>>? answers;
 
   const ResultPage({
-    super.key, 
-    required this.studentScores,
+    Key? key, 
+    required this.students, 
     this.observerData,
-    this.instrumentType,
+    required this.studentScores,
     this.classLevel,
     this.programKeahlian,
-    this.students,
-    this.answers,
-  });
+  }) : super(key: key);
 
   @override
   State<ResultPage> createState() => _ResultPageState();
 }
 
 class _ResultPageState extends State<ResultPage> {
-  bool _isSaving = false;
-  bool _isSaved = false;
-
-  Future<void> _saveToFirebase() async {
-    if (widget.observerData == null || 
-        widget.instrumentType == null || 
-        widget.students == null || 
-        widget.answers == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data tidak lengkap untuk disimpan')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSaving = true;
-    });
-
-    try {
-      await FirebaseService.saveAssessmentData(
-        observerData: widget.observerData!,
-        instrumentType: widget.instrumentType!,
-        classLevel: widget.classLevel ?? '',
-        programKeahlian: widget.programKeahlian ?? '',
-        students: widget.students!,
-        answers: widget.answers!,
-        studentScores: widget.studentScores,
-      );
-
-      setState(() {
-        _isSaved = true;
-        _isSaving = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Data berhasil disimpan ke Firebase!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      setState(() {
-        _isSaving = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ Error menyimpan data: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
   @override
   Widget build(BuildContext context) {
-    final students = widget.studentScores.keys.toList();
-    final pages = (students.length / 12).ceil();
+    // Bagi siswa per halaman (9 per halaman → 3x3)
+    final pages = <List<Student>>[];
+    for (var i = 0; i < widget.students.length; i += 9) {
+      pages.add(widget.students.sublist(
+        i,
+        i + 9 > widget.students.length ? widget.students.length : i + 9,
+      ));
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hasil Penilaian Soft Skills'),
-        backgroundColor: Colors.blueAccent,
-        actions: [
-          if (!_isSaved)
-            IconButton(
-              onPressed: _isSaving ? null : _saveToFirebase,
-              icon: _isSaving 
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save),
-              tooltip: 'Simpan ke Firebase',
-            ),
-          if (_isSaved)
-            const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-            ),
-        ],
+        title: const Text("Hasil Penilaian Soft Skills"),
+        backgroundColor: Colors.blue.shade700,
       ),
+      backgroundColor: Colors.blue.shade50,
       body: Column(
         children: [
+          // 🔹 Informasi sekolah / kelas / program / observer
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (widget.observerData != null && widget.observerData!.schoolName.isNotEmpty)
+                  Text(
+                    'Sekolah: ${widget.observerData!.schoolName}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                Text(
+                  'Kelas: ${widget.classLevel ?? 'Tidak tersedia'}  •  Program: ${widget.programKeahlian ?? 'Tidak tersedia'}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (widget.observerData != null)
+                  Text(
+                    'Observer: ${widget.observerData!.observerName} (${widget.observerData!.role})',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 80,
+                  child: Image.asset('assets/images/vossa4tefa.png', fit: BoxFit.contain),
+                ),
+              ],
+            ),
+          ),
+
+          // 🔹 Grid Radar Chart tiap siswa
           Expanded(
             child: PageView.builder(
-              itemCount: pages,
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() => _currentPage = index);
+              },
+              itemCount: pages.length,
               itemBuilder: (context, pageIndex) {
-                final pageStudents = students.skip(pageIndex * 12).take(12).toList();
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, // 3 kolom
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                    ),
-                    itemCount: pageStudents.length,
-                    itemBuilder: (context, index) {
-                      final studentName = pageStudents[index];
-                      final scores = widget.studentScores[studentName] ?? {};
-                      return _buildRadarChartCard(studentName, scores);
-                    },
+                final studentsPage = pages[pageIndex];
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, // Ubah dari 3 ke 2 untuk lebih responsive
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.75, // Sesuaikan ratio untuk chart yang lebih baik
                   ),
+                  itemCount: studentsPage.length,
+                  itemBuilder: (context, index) {
+                    final student = studentsPage[index];
+                    return GestureDetector(
+                      onTap: () {
+                        // Ambil data scores untuk siswa ini
+                        final studentScoreData = widget.studentScores[student.name] ?? {};
+                        
+                        // Navigasi ke halaman detail siswa
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StudentDetailPage(
+                              studentName: student.name,
+                              studentScores: studentScoreData,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.blue.shade50,
+                                Colors.white,
+                              ],
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade700,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    student.name,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Expanded(child: _buildRadarChart(student)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
           ),
-          // Tombol Selanjutnya untuk melihat ringkasan kelas
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16.0),
+
+          // 🔹 Pagination Indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(pages.length, (index) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentPage == index ? Colors.blue.shade700 : Colors.grey,
+                ),
+              );
+            }),
+          ),
+
+          // 🔹 Tombol ke Ringkasan Kelas
+          Padding(
+            padding: const EdgeInsets.all(12.0),
             child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                minimumSize: const Size(double.infinity, 48),
+              ),
               onPressed: () {
-                Navigator.pushNamed(
+                Navigator.push(
                   context,
-                  '/class-summary',
-                  arguments: widget.studentScores,
+                  MaterialPageRoute(
+                    builder: (context) => ClassSummaryPage(
+                      studentScores: widget.studentScores,
+                      schoolName: widget.observerData?.schoolName,
+                      className: widget.classLevel,
+                      programName: widget.programKeahlian,
+                      observerName: widget.observerData?.observerName,
+                    ),
+                  ),
                 );
               },
-              icon: const Icon(Icons.analytics),
-              label: const Text('Lihat Ringkasan Kelas'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
+              icon: const Icon(Icons.bar_chart),
+              label: const Text("Lihat Ringkasan Kelas"),
             ),
           ),
         ],
@@ -166,291 +212,117 @@ class _ResultPageState extends State<ResultPage> {
     );
   }
 
-  Widget _buildRadarChartCard(String studentName, Map<String, double> scores) {
-    if (scores.isEmpty) {
+  Widget _buildRadarChart(Student student) {
+    // Label pendek untuk menghindari overlap
+    final shortLabels = [
+      "KOM",
+      "KS",
+      "TJ",
+      "FS",
+      "PS",
+      "KP",
+    ];
+
+    // Ambil data scores dari studentScores map
+    // studentScores menggunakan nama siswa sebagai key (String), bukan objek Student
+    final studentScoreData = widget.studentScores[student.name] ?? {};
+    
+    // Fungsi untuk mencari nilai berdasarkan aspek dalam key yang panjang
+    double getScoreForAspect(String aspect) {
+      // Kumpulkan semua nilai untuk aspek ini dari semua tahap
+      final scores = <double>[];
+      for (var entry in studentScoreData.entries) {
+        if (entry.key.contains('($aspect)')) {
+          scores.add(entry.value);
+        }
+      }
+      
+      // Hitung rata-rata dari semua tahap
+      if (scores.isEmpty) return 0.0;
+      return scores.reduce((a, b) => a + b) / scores.length;
+    }
+    
+    final values = [
+      getScoreForAspect("Komunikasi"),
+      getScoreForAspect("Kerja Sama"),
+      getScoreForAspect("Tanggung Jawab"),
+      getScoreForAspect("Fleksibilitas"),
+      getScoreForAspect("Problem Solving"),
+      getScoreForAspect("Kepemimpinan"),
+    ];
+
+    // Debug: Print data untuk troubleshooting (bisa dihapus setelah testing)
+    // print('=== DEBUG RESULT PAGE ===');
+    // print('Student: ${student.name}');
+    // print('Values: $values');
+    // print('========================');
+
+    // Pastikan ada data yang valid
+    final hasValidData = values.any((v) => v > 0);
+    
+    if (!hasValidData) {
       return Container(
-        margin: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.white, Colors.grey.shade50],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.15),
-              spreadRadius: 1,
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
+        height: 200,
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 35,
-                height: 35,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_outline,
-                  color: Colors.grey,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                studentName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'No data',
-                style: TextStyle(fontSize: 10, color: Colors.grey),
-              ),
+              Icon(Icons.warning, color: Colors.orange, size: 48),
+              SizedBox(height: 8),
+              Text('Data penilaian belum tersedia', 
+                   style: TextStyle(color: Colors.grey[600])),
             ],
           ),
         ),
       );
     }
 
-    final skills = scores.keys.toList();
-    final values = scores.values.toList();
-    final average = values.reduce((a, b) => a + b) / values.length;
-
     return Container(
-      margin: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.blue.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(6.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header dengan avatar dan nama
-            Row(
-              children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade400, Colors.blue.shade600],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 10,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    studentName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 9,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            
-            // Progress bar untuk skill pertama (Persiapan)
-            if (skills.isNotEmpty) ...[
-              _buildSkillProgress(skills[0], values[0]),
-              const SizedBox(height: 4),
-            ],
-            
-            // Average score dengan design yang menarik
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade100, Colors.blue.shade50],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.blue.shade200, width: 1),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Avg',
-                    style: TextStyle(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.shade500, Colors.blue.shade700],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      average.toStringAsFixed(1),
-                      style: const TextStyle(
-                        fontSize: 7,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 4),
-            
-            // Detail button dengan design modern
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/student-detail',
-                    arguments: {
-                      'studentName': studentName,
-                      'studentScores': scores,
-                    },
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  elevation: 0,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade500, Colors.blue.shade700],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.visibility, size: 8),
-                      SizedBox(width: 2),
-                      Text(
-                        'Detail',
-                        style: TextStyle(
-                          fontSize: 7,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+      height: 220,
+      width: double.infinity,
+      padding: const EdgeInsets.all(8),
+      child: RadarChart(
+        RadarChartData(
+          radarShape: RadarShape.polygon,
+          dataSets: [
+            RadarDataSet(
+              entryRadius: 6,
+              borderColor: Colors.blue.shade700,
+              fillColor: Colors.blue.shade300.withOpacity(0.2),
+              borderWidth: 3,
+              dataEntries: values.map((v) => RadarEntry(value: v)).toList(),
             ),
           ],
+          radarBackgroundColor: Colors.white,
+          radarBorderData: BorderSide(color: Colors.grey.shade400, width: 2),
+          tickCount: 5,
+          ticksTextStyle: TextStyle(
+            color: Colors.transparent, // Sembunyikan angka-angka
+            fontSize: 0,
+          ),
+          titleTextStyle: TextStyle(
+            color: Colors.blue.shade800, 
+            fontSize: 9, 
+            fontWeight: FontWeight.w600,
+          ),
+          titlePositionPercentageOffset: 0.3,
+          getTitle: (index, angle) {
+            // Gunakan posisi yang lebih jauh untuk semua label
+            return RadarChartTitle(
+              text: shortLabels[index],
+              positionPercentageOffset: 0.35,
+            );
+          },
+          // Tambahkan grid untuk membuat chart lebih mudah dibaca
+          gridBorderData: BorderSide(
+            color: Colors.grey.shade300, 
+            width: 1,
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSkillProgress(String skill, double value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              skill.length > 5 ? skill.substring(0, 5) : skill,
-              style: const TextStyle(
-                fontSize: 7,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              value.toStringAsFixed(1),
-              style: TextStyle(
-                fontSize: 7,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue.shade700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 1),
-        Container(
-          height: 3,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(1.5),
-          ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: value / 4.0,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade400, Colors.blue.shade600],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(1.5),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
+
+
+  

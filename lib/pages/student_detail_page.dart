@@ -13,8 +13,10 @@ class StudentDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final indicators = studentScores.keys.toList();
-    final values = studentScores.values.toList();
+    // Gabungkan indikator per aspek untuk menghindari duplikasi
+    final aspectScores = _getAspectScores();
+    final aspects = aspectScores.keys.toList();
+    final values = aspectScores.values.toList();
     final maxValue = values.isNotEmpty ? values.reduce((a, b) => a > b ? a : b) : 5.0;
 
     return Scaffold(
@@ -50,7 +52,7 @@ class StudentDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Total Indikator: ${indicators.length}',
+                      'Total Aspek: ${aspects.length}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
@@ -97,10 +99,9 @@ class StudentDetailPage extends StatelessWidget {
                         color: Colors.black87,
                       ),
                       getTitle: (index, angle) {
-                        final indicator = indicators[index];
-                        final shortTitle = _getShortIndicator(indicator);
+                        final aspect = aspects[index];
                         return RadarChartTitle(
-                          text: shortTitle,
+                          text: aspect,
                           angle: angle,
                         );
                       },
@@ -135,9 +136,9 @@ class StudentDetailPage extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                  children: indicators.asMap().entries.map((entry) {
+                  children: aspects.asMap().entries.map((entry) {
                     final index = entry.key;
-                    final indicator = entry.value;
+                    final aspect = entry.value;
                     final value = values[index];
                     final percentage = (value / maxValue).clamp(0.0, 1.0);
                     
@@ -151,7 +152,7 @@ class StudentDetailPage extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  '${index + 1}. ${_getShortIndicator(indicator)}',
+                                  '${index + 1}. $aspect',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 12,
@@ -215,9 +216,9 @@ class StudentDetailPage extends StatelessWidget {
               child: ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: indicators.length,
+                itemCount: aspects.length,
                 itemBuilder: (context, index) {
-                  final indicator = indicators[index];
+                  final aspect = aspects[index];
                   final value = values[index];
                   
                   return ListTile(
@@ -232,11 +233,11 @@ class StudentDetailPage extends StatelessWidget {
                       ),
                     ),
                     title: Text(
-                      _getShortIndicator(indicator),
+                      aspect,
                       style: const TextStyle(fontSize: 12),
                     ),
                     subtitle: Text(
-                      _getFullIndicator(indicator),
+                      'Rata-rata dari semua indikator',
                       style: TextStyle(
                         fontSize: 10,
                         color: Colors.grey.shade600,
@@ -267,17 +268,32 @@ class StudentDetailPage extends StatelessWidget {
     );
   }
   
-  String _getShortIndicator(String indicator) {
-    // Ambil bagian terakhir dari indicator (dalam kurung)
-    final parts = indicator.split('(');
-    if (parts.length > 1) {
-      return parts.last.replaceAll(')', '').trim();
+  // Fungsi untuk menggabungkan skor per aspek
+  Map<String, double> _getAspectScores() {
+    final aspectScores = <String, List<double>>{};
+    
+    // Kumpulkan semua skor per aspek
+    for (var entry in studentScores.entries) {
+      final key = entry.key;
+      final score = entry.value;
+      
+      // Ekstrak nama aspek dari key (dalam kurung)
+      final parts = key.split('(');
+      if (parts.length > 1) {
+        final aspect = parts.last.replaceAll(')', '').trim();
+        aspectScores.putIfAbsent(aspect, () => []).add(score);
+      }
     }
-    return indicator.length > 30 ? '${indicator.substring(0, 30)}...' : indicator;
-  }
-  
-  String _getFullIndicator(String indicator) {
-    return indicator;
+    
+    // Hitung rata-rata untuk setiap aspek
+    final result = <String, double>{};
+    aspectScores.forEach((aspect, scores) {
+      if (scores.isNotEmpty) {
+        result[aspect] = scores.reduce((a, b) => a + b) / scores.length;
+      }
+    });
+    
+    return result;
   }
   
   Color _getScoreColor(double score) {
