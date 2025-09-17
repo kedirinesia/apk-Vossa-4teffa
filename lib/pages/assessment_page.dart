@@ -79,18 +79,37 @@ class _AssessmentPageState extends State<AssessmentPage> {
   Widget _buildDropdownCell(String student, String stage, String butir) {
     final key = '$stage|$butir';
     final current = answers[student]![key];
-    return DropdownButton<String>(
-      value: (current == '') ? null : current,
-      hint: const Text('Pilih'),
-      underline: const SizedBox(),
-      onChanged: (val) {
-        setState(() {
-          answers[student]![key] = val ?? '';
-        });
-      },
-      items: scaleOptions
-          .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-          .toList(),
+    final isEmpty = current == '';
+    
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isEmpty ? Colors.red.shade300 : Colors.grey.shade300,
+          width: isEmpty ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(4),
+        color: isEmpty ? Colors.red.shade50 : Colors.white,
+      ),
+      child: DropdownButton<String>(
+        value: isEmpty ? null : current,
+        hint: Text(
+          'Pilih',
+          style: TextStyle(
+            color: isEmpty ? Colors.red.shade600 : Colors.grey.shade600,
+            fontWeight: isEmpty ? FontWeight.w500 : FontWeight.normal,
+          ),
+        ),
+        underline: const SizedBox(),
+        isExpanded: true,
+        onChanged: (val) {
+          setState(() {
+            answers[student]![key] = val ?? '';
+          });
+        },
+        items: scaleOptions
+            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+            .toList(),
+      ),
     );
   }
 
@@ -134,6 +153,76 @@ class _AssessmentPageState extends State<AssessmentPage> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
+                  // Validasi: Cek apakah semua field sudah diisi
+                  bool allFieldsFilled = true;
+                  List<String> emptyFields = [];
+                  
+                  for (var student in students) {
+                    final studentAnswers = answers[student]!;
+                    for (var entry in studentAnswers.entries) {
+                      if (entry.value.isEmpty) {
+                        allFieldsFilled = false;
+                        final parts = entry.key.split('|');
+                        final stage = parts.length > 0 ? parts[0] : '';
+                        final butir = parts.length > 1 ? parts[1] : entry.key;
+                        emptyFields.add('$student - $stage: $butir');
+                      }
+                    }
+                  }
+                  
+                  if (!allFieldsFilled) {
+                    // Tampilkan dialog error dengan daftar field yang belum diisi
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Data Belum Lengkap'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Mohon lengkapi semua field penilaian berikut:'),
+                              const SizedBox(height: 12),
+                              Container(
+                                height: 200,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: emptyFields.take(10).map((field) => 
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Text(
+                                          '• $field',
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      )
+                                    ).toList(),
+                                  ),
+                                ),
+                              ),
+                              if (emptyFields.length > 10)
+                                Text(
+                                  '... dan ${emptyFields.length - 10} field lainnya',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    return;
+                  }
+                  
                   // Hitung skor untuk setiap siswa
                   final Map<String, Map<String, double>> studentScores = {};
                   

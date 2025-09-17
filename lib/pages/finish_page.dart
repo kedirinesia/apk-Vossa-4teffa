@@ -18,6 +18,7 @@ class StudentScore {
 
 class FinishPage extends StatelessWidget {
   final List<StudentScore> studentScores;
+  final Map<String, Map<String, String>> answers;
   final List<String> aspects; // misal ['Fleksibilitas', 'Tanggung Jawab', 'Problem Solving', 'Komunikasi', 'Kerja Sama', 'Kepemimpinan']
   final String? schoolName;
   final String? className;
@@ -26,7 +27,8 @@ class FinishPage extends StatelessWidget {
 
   const FinishPage({
     Key? key, 
-    required this.studentScores, 
+    required this.studentScores,
+    required this.answers,
     required this.aspects,
     this.schoolName,
     this.className,
@@ -115,7 +117,8 @@ class FinishPage extends StatelessWidget {
       );
 
       final output = await getApplicationDocumentsDirectory();
-      final fileName = 'ringkasan_penilaian_soft_skills_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final schoolNameClean = (schoolName ?? 'Sekolah').replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\s-]'), '');
+      final fileName = '${schoolNameClean}_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final file = File('${output.path}/$fileName');
       await file.writeAsBytes(await pdf.save());
       
@@ -131,47 +134,67 @@ class FinishPage extends StatelessWidget {
     }
   }
 
-  // Method untuk generate Excel
+  // Method untuk generate Excel dengan data mentah assessment
   Future<void> _generateExcel() async {
     try {
       // Buat Excel workbook baru
       var excel = Excel.createExcel();
       excel.delete('Sheet1'); // Hapus sheet default
-      var sheet = excel['Ringkasan Penilaian']; // Buat sheet dengan nama yang lebih baik
+      var sheet = excel['Data Assessment']; // Buat sheet dengan nama yang lebih baik
       
       // Informasi header
-      sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('RINGKASAN PENILAIAN SOFT SKILLS');
+      sheet.cell(CellIndex.indexByString('A1')).value = TextCellValue('DATA ASSESSMENT SOFT SKILLS');
       sheet.cell(CellIndex.indexByString('A2')).value = TextCellValue('Tanggal: ${DateTime.now().toString().split(' ')[0]}');
       sheet.cell(CellIndex.indexByString('A3')).value = TextCellValue('Sekolah: ${schoolName ?? '-'}');
       sheet.cell(CellIndex.indexByString('A4')).value = TextCellValue('Kelas: ${className ?? '-'}');
       sheet.cell(CellIndex.indexByString('A5')).value = TextCellValue('Program Keahlian: ${programName ?? '-'}');
       sheet.cell(CellIndex.indexByString('A6')).value = TextCellValue('Observer: ${observerName ?? '-'}');
       
-      // Header tabel
-      sheet.cell(CellIndex.indexByString('A8')).value = TextCellValue('Nama Siswa');
-      for (int i = 0; i < aspects.length; i++) {
-        final column = String.fromCharCode(66 + i); // B, C, D, etc.
-        sheet.cell(CellIndex.indexByString('${column}8')).value = TextCellValue(aspects[i]);
+      // Header tabel - Alur Pembelajaran, Butir Observasi, dan kolom untuk setiap siswa
+      sheet.cell(CellIndex.indexByString('A8')).value = TextCellValue('Alur Pembelajaran');
+      sheet.cell(CellIndex.indexByString('B8')).value = TextCellValue('Butir Observasi');
+      
+      // Buat kolom untuk setiap siswa
+      final students = answers.keys.toList();
+      for (int i = 0; i < students.length; i++) {
+        final column = String.fromCharCode(67 + i); // C, D, E, etc.
+        sheet.cell(CellIndex.indexByString('${column}8')).value = TextCellValue(students[i]);
       }
       
-      // Data siswa
-      for (int i = 0; i < studentScores.length; i++) {
-        final student = studentScores[i];
+      // Ambil semua butir observasi dari data answers
+      final allObservations = <String>[];
+      if (answers.isNotEmpty) {
+        final firstStudent = students.first;
+        final firstStudentAnswers = answers[firstStudent]!;
+        allObservations.addAll(firstStudentAnswers.keys);
+      }
+      
+      // Data butir observasi dan jawaban
+      for (int i = 0; i < allObservations.length; i++) {
+        final observation = allObservations[i];
         final row = i + 9; // Mulai dari baris 9
         
-        sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(student.name);
+        // Parse alur pembelajaran dan butir observasi dari key
+        final parts = observation.split('|');
+        final alurPembelajaran = parts.length > 0 ? parts[0] : '';
+        final butirObservasi = parts.length > 1 ? parts[1] : observation;
         
-        for (int j = 0; j < aspects.length; j++) {
-          final aspect = aspects[j];
-          final score = student.scores[aspect] ?? '-';
-          final column = String.fromCharCode(66 + j); // B, C, D, etc.
-          sheet.cell(CellIndex.indexByString('$column$row')).value = TextCellValue(score);
+        sheet.cell(CellIndex.indexByString('A$row')).value = TextCellValue(alurPembelajaran);
+        sheet.cell(CellIndex.indexByString('B$row')).value = TextCellValue(butirObservasi);
+        
+        // Jawaban setiap siswa untuk butir observasi ini
+        for (int j = 0; j < students.length; j++) {
+          final student = students[j];
+          final column = String.fromCharCode(67 + j); // C, D, E, etc.
+          final answer = answers[student]![observation] ?? '-';
+          sheet.cell(CellIndex.indexByString('$column$row')).value = TextCellValue(answer);
         }
       }
       
       // Simpan file
       final output = await getApplicationDocumentsDirectory();
-      final fileName = 'ringkasan_penilaian_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      final schoolNameClean = (schoolName ?? 'Sekolah').replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\s-]'), '');
+      final fileName = '${schoolNameClean}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
       final file = File('${output.path}/$fileName');
       
       // Encode dan simpan
@@ -273,7 +296,9 @@ class FinishPage extends StatelessWidget {
       );
 
       final output = await getTemporaryDirectory();
-      final file = File('${output.path}/ringkasan_penilaian_soft_skills.pdf');
+      final schoolNameClean = (schoolName ?? 'Sekolah').replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\s-]'), '');
+      final fileName = '${schoolNameClean}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final file = File('${output.path}/$fileName');
       await file.writeAsBytes(await pdf.save());
       
       // Share file
@@ -283,50 +308,73 @@ class FinishPage extends StatelessWidget {
     }
   }
 
-  // Method untuk share Excel
+  // Method untuk share Excel dengan data mentah assessment
   Future<void> _shareExcel() async {
     try {
       var excel = Excel.createExcel();
       Sheet sheetObject = excel['Sheet1'];
       
       // Informasi sekolah di baris pertama
-      sheetObject.cell(CellIndex.indexByString('A1')).value = TextCellValue('RINGKASAN PENILAIAN SOFT SKILLS');
+      sheetObject.cell(CellIndex.indexByString('A1')).value = TextCellValue('DATA ASSESSMENT SOFT SKILLS');
       sheetObject.cell(CellIndex.indexByString('A2')).value = TextCellValue('Tanggal: ${DateTime.now().toString().split(' ')[0]}');
       sheetObject.cell(CellIndex.indexByString('A3')).value = TextCellValue('Sekolah: ${schoolName ?? '-'}');
       sheetObject.cell(CellIndex.indexByString('A4')).value = TextCellValue('Kelas: ${className ?? '-'}');
       sheetObject.cell(CellIndex.indexByString('A5')).value = TextCellValue('Program Keahlian: ${programName ?? '-'}');
       sheetObject.cell(CellIndex.indexByString('A6')).value = TextCellValue('Observer: ${observerName ?? '-'}');
       
-      // Header tabel di baris 8
-      sheetObject.cell(CellIndex.indexByString('A8')).value = TextCellValue('Nama Siswa');
-      for (int i = 0; i < aspects.length; i++) {
-        sheetObject.cell(CellIndex.indexByString('${String.fromCharCode(66 + i)}8')).value = TextCellValue(aspects[i]);
+      // Header tabel - Alur Pembelajaran, Butir Observasi, dan kolom untuk setiap siswa
+      sheetObject.cell(CellIndex.indexByString('A8')).value = TextCellValue('Alur Pembelajaran');
+      sheetObject.cell(CellIndex.indexByString('B8')).value = TextCellValue('Butir Observasi');
+      
+      // Buat kolom untuk setiap siswa
+      final students = answers.keys.toList();
+      for (int i = 0; i < students.length; i++) {
+        final column = String.fromCharCode(67 + i); // C, D, E, etc.
+        sheetObject.cell(CellIndex.indexByString('${column}8')).value = TextCellValue(students[i]);
       }
       
-      // Data
-      for (int i = 0; i < studentScores.length; i++) {
-        final student = studentScores[i];
-        sheetObject.cell(CellIndex.indexByString('A${i + 9}')).value = TextCellValue(student.name);
+      // Ambil semua butir observasi dari data answers
+      final allObservations = <String>[];
+      if (answers.isNotEmpty) {
+        final firstStudent = students.first;
+        final firstStudentAnswers = answers[firstStudent]!;
+        allObservations.addAll(firstStudentAnswers.keys);
+      }
+      
+      // Data butir observasi dan jawaban
+      for (int i = 0; i < allObservations.length; i++) {
+        final observation = allObservations[i];
+        final row = i + 9; // Mulai dari baris 9
         
-        for (int j = 0; j < aspects.length; j++) {
-          final aspect = aspects[j];
-          final score = student.scores[aspect] ?? '-';
-          sheetObject.cell(CellIndex.indexByString('${String.fromCharCode(66 + j)}${i + 9}')).value = TextCellValue(score);
+        // Parse alur pembelajaran dan butir observasi dari key
+        final parts = observation.split('|');
+        final alurPembelajaran = parts.length > 0 ? parts[0] : '';
+        final butirObservasi = parts.length > 1 ? parts[1] : observation;
+        
+        sheetObject.cell(CellIndex.indexByString('A$row')).value = TextCellValue(alurPembelajaran);
+        sheetObject.cell(CellIndex.indexByString('B$row')).value = TextCellValue(butirObservasi);
+        
+        // Jawaban setiap siswa untuk butir observasi ini
+        for (int j = 0; j < students.length; j++) {
+          final student = students[j];
+          final column = String.fromCharCode(67 + j); // C, D, E, etc.
+          final answer = answers[student]![observation] ?? '-';
+          sheetObject.cell(CellIndex.indexByString('$column$row')).value = TextCellValue(answer);
         }
       }
       
       final output = await getTemporaryDirectory();
-      final fileName = 'ringkasan_penilaian_soft_skills_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      final schoolNameClean = (schoolName ?? 'Sekolah').replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\s-]'), '');
+      final fileName = '${schoolNameClean}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
       final file = File('${output.path}/$fileName');
       
       // Encode dan simpan file
       final bytes = excel.encode();
       if (bytes != null) {
         await file.writeAsBytes(bytes);
-        print('Excel file for sharing saved to: ${file.path}');
         
         // Share file
-        await Share.shareXFiles([XFile(file.path)], text: 'Ringkasan Penilaian Soft Skills');
+        await Share.shareXFiles([XFile(file.path)], text: 'Data Assessment Soft Skills');
       } else {
         print('Error: Failed to encode Excel file for sharing');
       }
@@ -403,7 +451,7 @@ class FinishPage extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: _generateExcel,
                   icon: Icon(Icons.table_chart, color: Colors.green),
-                  label: Text('Simpan Excel'),
+                  label: Text('Simpan Data Assessment'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade50,
                     foregroundColor: Colors.green.shade700,
@@ -435,7 +483,7 @@ class FinishPage extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: _shareExcel,
                   icon: Icon(Icons.share, color: Colors.orange),
-                  label: Text('Share Excel'),
+                  label: Text('Share Data Assessment'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange.shade50,
                     foregroundColor: Colors.orange.shade700,

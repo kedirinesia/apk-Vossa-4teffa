@@ -9,6 +9,7 @@ class ResultPage extends StatefulWidget {
   final List<Student> students;
   final ObserverData? observerData;
   final Map<String, Map<String, double>> studentScores;
+  final Map<String, Map<String, String>> answers;
   final String? classLevel;
   final String? programKeahlian;
 
@@ -17,6 +18,7 @@ class ResultPage extends StatefulWidget {
     required this.students, 
     this.observerData,
     required this.studentScores,
+    required this.answers,
     this.classLevel,
     this.programKeahlian,
   }) : super(key: key);
@@ -195,6 +197,7 @@ class _ResultPageState extends State<ResultPage> {
                   MaterialPageRoute(
                     builder: (context) => ClassSummaryPage(
                       studentScores: widget.studentScores,
+                      answers: widget.answers,
                       schoolName: widget.observerData?.schoolName,
                       className: widget.classLevel,
                       programName: widget.programKeahlian,
@@ -269,7 +272,7 @@ class _ResultPageState extends State<ResultPage> {
             children: [
               Icon(Icons.warning, color: Colors.orange, size: 48),
               SizedBox(height: 8),
-              Text('Data penilaian belum tersedia', 
+              Text('Data penilaian belum diisi!', 
                    style: TextStyle(color: Colors.grey[600])),
             ],
           ),

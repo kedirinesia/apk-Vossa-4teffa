@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'finish_page.dart'; // Pastikan import FinishPage
+import 'class_analysis_page.dart';
+import '../models/observer_data.dart';
 
 class ClassSummaryPage extends StatelessWidget {
   final Map<String, Map<String, double>> studentScores;
+  final Map<String, Map<String, String>> answers;
   final String? schoolName;
   final String? className;
   final String? programName;
@@ -12,11 +14,13 @@ class ClassSummaryPage extends StatelessWidget {
   const ClassSummaryPage({
     Key? key, 
     required this.studentScores,
+    required this.answers,
     this.schoolName,
     this.className,
     this.programName,
     this.observerName,
   }) : super(key: key);
+
 
   double average(List<double?> values) {
     final nonNullValues = values.map((v) => v ?? 0).toList();
@@ -33,28 +37,6 @@ class ClassSummaryPage extends StatelessWidget {
     return "Sangat Baik";
   }
 
-  List<StudentScore> _convertToStudentScores() {
-    final aspects = ["KOM", "KS", "TJ", "FS", "PS", "KP"];
-    final fullNames = ["Komunikasi", "Kerja Sama", "Tanggung Jawab", "Fleksibilitas", "Problem Solving", "Kepemimpinan"];
-    final result = <StudentScore>[];
-    
-    for (var studentName in studentScores.keys) {
-      final scores = studentScores[studentName]!;
-      final scoreMap = <String, String>{};
-      
-      for (int i = 0; i < aspects.length; i++) {
-        final aspect = aspects[i];
-        final fullName = fullNames[i];
-        final value = getScoreForAspect(aspect, scores);
-        final category = getCategory(value);
-        scoreMap[fullName] = category;
-      }
-      
-      result.add(StudentScore(name: studentName, scores: scoreMap));
-    }
-    
-    return result;
-  }
 
   // Fungsi untuk mencari nilai berdasarkan aspek dalam key yang panjang
   double getScoreForAspect(String aspect, Map<String, double> studentScoreData) {
@@ -280,18 +262,23 @@ class ClassSummaryPage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => FinishPage(
-                                  studentScores: _convertToStudentScores(),
-                                  aspects: fullNames,
-                                  schoolName: schoolName,
-                                  className: className,
-                                  programName: programName,
-                                  observerName: observerName,
+                                builder: (context) => ClassAnalysisPage(
+                                  studentScores: studentScores,
+                                  answers: answers,
+                                  classLevel: className ?? 'Kelas',
+                                  programKeahlian: programName ?? 'Program',
+                                  observerData: ObserverData(
+                                    observerName: observerName ?? 'Observer',
+                                    schoolName: schoolName ?? 'Sekolah',
+                                    mitraName: 'Mitra',
+                                    role: 'Guru',
+                                  ),
+                                  schoolName: schoolName ?? 'Sekolah',
                                 ),
                               ),
                             );
                           },
-                          child: const Text('Finish / Export Hasil'),
+                          child: const Text('Selanjutnya'),
                         ),
                         ElevatedButton(
                           onPressed: () {
@@ -310,6 +297,7 @@ class ClassSummaryPage extends StatelessWidget {
       ),
     );
   }
+
 }
 
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:soft_skills_tefa/pages/class_summary_page.dart';
 import 'firebase_options.dart';
 import 'pages/auth_wrapper.dart';
 import 'pages/cover_page.dart';
@@ -14,7 +13,6 @@ import 'pages/assessment_page.dart';
 import 'pages/result_page.dart';
 import 'pages/student_detail_page.dart';
  
-import 'pages/finish_page.dart';
 import 'models/observer_data.dart';
 import 'models/student.dart';
 
@@ -88,6 +86,7 @@ class SoftSkillsApp extends StatelessWidget {
                 students: students,
                 observerData: args['observerData'] as ObserverData?,
                 studentScores: args['studentScores'] as Map<String, Map<String, double>>,
+                answers: args['answers'] as Map<String, Map<String, String>>,
                 classLevel: args['classLevel'] as String?,
                 programKeahlian: args['programKeahlian'] as String?,
               ),
@@ -98,21 +97,6 @@ class SoftSkillsApp extends StatelessWidget {
               builder: (context) => StudentDetailPage(
                 studentName: args['studentName'] as String,
                 studentScores: args['studentScores'] as Map<String, double>,
-              ),
-            );
-          case '/class-summary':
-            final studentScores = settings.arguments as Map<String, Map<String, double>>;
-            return MaterialPageRoute(
-              builder: (context) => ClassSummaryPage(
-                studentScores: studentScores,
-              ),
-            );
-          case '/finish':
-            final args = settings.arguments as Map<String, dynamic>;
-            return MaterialPageRoute(
-              builder: (context) => FinishPage(
-                studentScores: args['studentScores'] as List<StudentScore>,
-                aspects: args['aspects'] as List<String>,
               ),
             );
           default:
