@@ -6,6 +6,7 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.9.0
+  
 
 dependencies:
   flutter:
@@ -27,8 +28,8 @@ dependencies:
   # 📊 Export Excel & PDF
   excel: ^4.0.6
   pdf: ^3.10.7
-  path_provider: ^2.1.2
-  open_file: ^3.3.2
+  path_provider: ^2.1.5
+  open_file: ^3.5.10
   share_plus: ^10.0.2
   http: ^1.1.0
 
@@ -43,3 +44,6 @@ flutter:
   assets:
     - assets/images/
     - assets/animations/
+
+dependency_overrides:
+  win32: ^5.14.0
