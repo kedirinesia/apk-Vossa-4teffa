@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/observer_data.dart';
 import '../data/instrument_data.dart';
@@ -24,12 +25,51 @@ class AssessmentPage extends StatefulWidget {
 
 class _AssessmentPageState extends State<AssessmentPage> {
   final List<String> scaleOptions = [
-    'Sangat Kurang',
     'Kurang',
     'Cukup',
     'Baik',
     'Sangat Baik'
   ];
+
+  // Deskriptor skala penilaian untuk setiap aspek soft skills
+  final Map<String, Map<String, String>> scoringDescriptors = {
+    'Fleksibilitas': {
+      'Kurang': 'Bingung dan tidak fleksibel jika menemui hal baru.',
+      'Cukup': 'Fleksibel hanya ketika diberi arahan, masih perlu bimbingan.',
+      'Baik': 'Fleksibel terhadap perubahan.',
+      'Sangat Baik': 'Sangat fleksibel bahkan memiliki inisiatif yang tinggi.',
+    },
+    'Tanggung Jawab': {
+      'Kurang': 'Tidak dapat diandalkan dalam menyelesaikan tugas.',
+      'Cukup': 'Hanya menyelesaikan tugas jika diingatkan, bergantung pada arahan.',
+      'Baik': 'Menyelesaikan tugas dengan baik dan tepat waktu.',
+      'Sangat Baik': 'Sangat andal dalam menyelesaikan tugas dan berorientasi kualitas.',
+    },
+    'Problem Solving': {
+      'Kurang': 'Pasif dan tidak berorientasi solusi.',
+      'Cukup': 'Berpotensi memecahkan masalah, tetapi belum mandiri.',
+      'Baik': 'Kompeten dalam mengidentifikasi dan memecahkan masalah.',
+      'Sangat Baik': 'Kompeten, aktif, dan efektif dalam mengidentifikasi masalah.',
+    },
+    'Komunikasi': {
+      'Kurang': 'Sulit mengutarakan gagasan dan sering menimbulkan salah paham.',
+      'Cukup': 'Komunikatif namun masih kurang terstruktur dan efektif.',
+      'Baik': 'Komunikasi jelas, runtut, dan mudah dipahami.',
+      'Sangat Baik': 'Komunikator yang efektif, sistematis, dan persuasif.',
+    },
+    'Kerja Sama': {
+      'Kurang': 'Cenderung bekerja sendiri.',
+      'Cukup': 'Kooperatif, namun kurang proaktif.',
+      'Baik': 'Kolaboratif dan berkontribusi dengan baik.',
+      'Sangat Baik': 'Kolaboratif, berinisiatif membantu, serta pencipta sinergi dalam tim.',
+    },
+    'Kepemimpinan': {
+      'Kurang': 'Pasif dan tidak menunjukkan inisiatif dalam memimpin.',
+      'Cukup': 'Berpotensi memimpin, tetapi masih butuh bimbingan.',
+      'Baik': 'Memimpin dengan efektif dan dapat memotivasi tim.',
+      'Sangat Baik': 'Memimpin dengan efektif, proaktif mengarahkan, strategis, dan memotivasi tim.',
+    },
+  };
 
   final Map<String, Map<String, String>> answers = {};
   late final List<Map<String, String>> indicatorData;
@@ -76,10 +116,34 @@ class _AssessmentPageState extends State<AssessmentPage> {
     return instrumentIndicators.keys.first;
   }
 
+  // Method to extract aspect name from indicator text
+  String _getAspectFromIndicator(String indicator) {
+    if (indicator.contains('(Fleksibilitas)')) return 'Fleksibilitas';
+    if (indicator.contains('(Tanggung Jawab)')) return 'Tanggung Jawab';
+    if (indicator.contains('(Problem Solving)')) return 'Problem Solving';
+    if (indicator.contains('(Komunikasi)')) return 'Komunikasi';
+    if (indicator.contains('(Kerja Sama)')) return 'Kerja Sama';
+    if (indicator.contains('(Kepemimpinan)')) return 'Kepemimpinan';
+    return 'Fleksibilitas'; // default
+  }
+
+
+  // Method to generate shuffled options for each question (butir) per student
+  List<String> _getShuffledOptions(String studentName, String key) {
+    // Use combination of student name and question key as seed for random shuffling
+    final seed = (studentName + key).hashCode;
+    final random = Random(seed);
+    final shuffledOptions = List<String>.from(scaleOptions);
+    shuffledOptions.shuffle(random);
+    return shuffledOptions;
+  }
+
   Widget _buildDropdownCell(String student, String stage, String butir) {
     final key = '$stage|$butir';
     final current = answers[student]![key];
     final isEmpty = current == '';
+    final aspect = _getAspectFromIndicator(butir);
+    final shuffledOptions = _getShuffledOptions(student, key);
     
     return Container(
       decoration: BoxDecoration(
@@ -91,6 +155,8 @@ class _AssessmentPageState extends State<AssessmentPage> {
         color: isEmpty ? Colors.red.shade50 : Colors.white,
       ),
       child: DropdownButton<String>(
+        isExpanded: true,
+        menuMaxHeight: 500,
         value: isEmpty ? null : current,
         hint: Text(
           'Pilih',
@@ -100,15 +166,33 @@ class _AssessmentPageState extends State<AssessmentPage> {
           ),
         ),
         underline: const SizedBox(),
-        isExpanded: true,
         onChanged: (val) {
           setState(() {
             answers[student]![key] = val ?? '';
           });
         },
-        items: scaleOptions
-            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-            .toList(),
+        items: shuffledOptions.map((s) {
+          final descriptor = scoringDescriptors[aspect]?[s] ?? '';
+          return DropdownMenuItem(
+            value: s,
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 300),
+          //    padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+              child: Text(
+                descriptor,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade800,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.left,
+                maxLines: 20,
+                overflow: TextOverflow.visible,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -139,10 +223,10 @@ class _AssessmentPageState extends State<AssessmentPage> {
                   child: Table(
                     border: TableBorder.all(color: Colors.grey.shade300),
                     columnWidths: {
-                      0: const FixedColumnWidth(160), // Alur Pembelajaran
-                      1: const FixedColumnWidth(320), // Butir Observasi
+                      0: const FixedColumnWidth(180), // Alur Pembelajaran
+                      1: const FixedColumnWidth(350), // Butir Observasi
                       for (int i = 0; i < students.length; i++)
-                        i + 2: const FixedColumnWidth(180),
+                        i + 2: const FixedColumnWidth(280),
                     },
                     children: _buildTableRows(),
                   ),
@@ -238,20 +322,17 @@ class _AssessmentPageState extends State<AssessmentPage> {
                       // Konversi jawaban ke skor numerik
                       double score = 0;
                       switch (answer) {
-                        case 'Sangat Kurang':
+                        case 'Kurang':
                           score = 1;
                           break;
-                        case 'Kurang':
+                        case 'Cukup':
                           score = 2;
                           break;
-                        case 'Cukup':
+                        case 'Baik':
                           score = 3;
                           break;
-                        case 'Baik':
-                          score = 4;
-                          break;
                         case 'Sangat Baik':
-                          score = 5;
+                          score = 4;
                           break;
                         default:
                           score = 0;

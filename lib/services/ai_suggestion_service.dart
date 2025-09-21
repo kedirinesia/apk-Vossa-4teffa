@@ -167,11 +167,11 @@ class AISuggestionService {
     String balanceContext = '';
     if (isBalanced) {
       final avgScore = scores.reduce((a, b) => a + b) / scores.length;
-      if (avgScore <= 2.0) {
+      if (avgScore <= 1.5) {
         balanceContext = 'CATATAN: Semua aspek memiliki skor rendah dan seimbang. Siswa membutuhkan pengembangan menyeluruh di semua aspek.';
-      } else if (avgScore <= 3.0) {
+      } else if (avgScore <= 2.5) {
         balanceContext = 'CATATAN: Semua aspek memiliki skor sedang dan seimbang. Siswa membutuhkan peningkatan konsisten di semua aspek.';
-      } else if (avgScore <= 4.0) {
+      } else if (avgScore <= 3.5) {
         balanceContext = 'CATATAN: Semua aspek memiliki skor baik dan seimbang. Siswa membutuhkan penguatan dan tantangan lebih di semua aspek.';
       } else {
         balanceContext = 'CATATAN: Semua aspek memiliki skor sangat baik dan seimbang. Siswa siap untuk tantangan advanced di semua aspek.';
@@ -194,7 +194,7 @@ Aspek yang dinilai:
 - Problem Solving: Kemampuan memecahkan masalah
 - Kepemimpinan: Kemampuan memimpin
 
-Skala: 1.0 (Sangat Kurang) - 5.0 (Sangat Baik)
+Skala: 1.0 (Kurang) - 4.0 (Sangat Baik)
 
 INSTRUKSI KHUSUS:
 - Berikan saran yang SINGKAT (maksimal 1 kalimat per saran)
@@ -235,7 +235,7 @@ Aspek yang dinilai:
 - Problem Solving (PS): Kemampuan memecahkan masalah
 - Kepemimpinan (KP): Kemampuan memimpin
 
-Skala penilaian: 1.0 (Sangat Kurang) - 5.0 (Sangat Baik)
+Skala penilaian: 1.0 (Kurang) - 4.0 (Sangat Baik)
 
 Berikan respons dalam format JSON:
 {
@@ -469,7 +469,7 @@ Berikan respons dalam format JSON:
     }
     
     String? weakestAspect;
-    double lowestScore = 5.0;
+    double lowestScore = 4.0;
     
     classAverages.forEach((aspect, score) {
       if (score < lowestScore) {
