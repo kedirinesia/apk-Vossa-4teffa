@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
+import 'pdf_options_page.dart';
 
 // Model sederhana untuk siswa dan nilai
 class StudentScore {
@@ -36,103 +37,6 @@ class FinishPage extends StatelessWidget {
     this.observerName,
   }) : super(key: key);
 
-  // Method untuk generate PDF
-  Future<void> _generatePDF() async {
-    try {
-      final pdf = pw.Document();
-      
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          build: (pw.Context context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  'RINGKASAN PENILAIAN SOFT SKILLS',
-                  style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 20),
-                pw.Text(
-                  'Tanggal: ${DateTime.now().toString().split(' ')[0]}',
-                  style: pw.TextStyle(fontSize: 12),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Text(
-                  'Sekolah: ${schoolName ?? '-'}',
-                  style: pw.TextStyle(fontSize: 12),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Kelas: ${className ?? '-'}',
-                  style: pw.TextStyle(fontSize: 12),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Program Keahlian: ${programName ?? '-'}',
-                  style: pw.TextStyle(fontSize: 12),
-                ),
-                pw.SizedBox(height: 5),
-                pw.Text(
-                  'Observer: ${observerName ?? '-'}',
-                  style: pw.TextStyle(fontSize: 12),
-                ),
-                pw.SizedBox(height: 20),
-                pw.Table(
-                  border: pw.TableBorder.all(),
-                  children: [
-                    // Header
-                    pw.TableRow(
-                      decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Nama Siswa', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        ),
-                        ...aspects.map((aspect) => pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text(aspect, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                        )).toList(),
-                      ],
-                    ),
-                    // Data rows
-                    ...studentScores.map((student) => pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text(student.name),
-                        ),
-                        ...aspects.map((aspect) => pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text(student.scores[aspect] ?? '-'),
-                        )).toList(),
-                      ],
-                    )).toList(),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
-      );
-
-      final output = await getApplicationDocumentsDirectory();
-      final schoolNameClean = (schoolName ?? 'Sekolah').replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\s-]'), '');
-      final fileName = '${schoolNameClean}_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final file = File('${output.path}/$fileName');
-      await file.writeAsBytes(await pdf.save());
-      
-      print('PDF file saved to: ${file.path}');
-      
-      // Buka file PDF
-      final result = await OpenFile.open(file.path);
-      if (result.type != ResultType.done) {
-        print('Error opening PDF file: ${result.message}');
-      }
-    } catch (e) {
-      print('Error generating PDF: $e');
-    }
-  }
 
   // Method untuk generate Excel dengan data mentah assessment
   Future<void> _generateExcel() async {
@@ -383,6 +287,26 @@ class FinishPage extends StatelessWidget {
     }
   }
 
+
+
+  // Method untuk navigasi ke halaman pilihan PDF
+  void _navigateToPDFOptions(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PDFOptionsPage(
+          studentScores: studentScores,
+          answers: answers,
+          aspects: aspects,
+          schoolName: schoolName,
+          className: className,
+          programName: programName,
+          observerName: observerName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -436,28 +360,52 @@ class FinishPage extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _generatePDF,
-                  icon: Icon(Icons.picture_as_pdf, color: Colors.red),
-                  label: Text('Simpan PDF'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade50,
-                    foregroundColor: Colors.red.shade700,
-                  ),
+            
+            // PDF Options
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Simpan File:',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _navigateToPDFOptions(context),
+                            icon: Icon(Icons.picture_as_pdf, color: Colors.blue, size: 18),
+                            label: Text('Pilih Format PDF', style: TextStyle(fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade50,
+                              foregroundColor: Colors.blue.shade700,
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _generateExcel,
+                            icon: Icon(Icons.table_chart, color: Colors.green, size: 18),
+                            label: Text('Excel Data', style: TextStyle(fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade50,
+                              foregroundColor: Colors.green.shade700,
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                ElevatedButton.icon(
-                  onPressed: _generateExcel,
-                  icon: Icon(Icons.table_chart, color: Colors.green),
-                  label: Text('Simpan Data Assessment'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade50,
-                    foregroundColor: Colors.green.shade700,
-                  ),
-                ),
-              ],
+              ),
             ),
             
             const SizedBox(height: 16),
@@ -495,14 +443,6 @@ class FinishPage extends StatelessWidget {
             const SizedBox(height: 16),
             
             // Tombol Navigasi
-            ElevatedButton(
-              onPressed: () {
-                // Kembali ke halaman CoverPage
-                Navigator.of(context).pushNamedAndRemoveUntil('/cover', (route) => false);
-              },
-              child: const Text('Kembali ke Halaman Utama'),
-            ),
-            const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () {
                 // Alternatif keluar/login ulang

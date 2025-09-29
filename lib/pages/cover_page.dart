@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import '../widgets/version_display.dart';
 
 class CoverPage extends StatelessWidget {
   const CoverPage({super.key});
@@ -7,16 +8,18 @@ class CoverPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF4A90E2), Color(0xFF50E3C2)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF4A90E2), Color(0xFF50E3C2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo di atas
@@ -78,6 +81,9 @@ class CoverPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+          const VersionDisplay(),
+        ],
       ),
     );
   }

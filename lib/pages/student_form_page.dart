@@ -41,8 +41,14 @@ class _StudentFormPageState extends State<StudentFormPage> {
     'Teknik Geologi Pertambangan',
     'Teknik Kimia',
     'Rekayasa Perangkat Lunak',
-    'Tata Boga',
-    'Akuntansi dan Keuangan',
+    'Teknik Pengelasan',
+    'Teknik Pengelasan dan Fabrikasi Logam',
+    'Desain dan Teknik Furnitur',
+    'Teknik Elektronika',
+    'Teknik Elektronika Industri',
+    'Teknik Bisnis dan Sepeda Motor',
+    'Bisnis Kontruksi',
+    'Teknik Tata Kelola Logistik',
   ];
 
   void _addStudentField() {

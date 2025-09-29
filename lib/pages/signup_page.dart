@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lottie/lottie.dart';
+import '../services/firebase_service.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -40,13 +41,24 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      // Update display name
-      await FirebaseAuth.instance.currentUser?.updateDisplayName(_nameController.text.trim());
+      final User? user = userCredential.user;
+      if (user != null) {
+        // Update display name
+        await user.updateDisplayName(_nameController.text.trim());
+
+        // Simpan data user ke Firestore
+        await FirebaseService.saveUserData(
+          uid: user.uid,
+          email: user.email ?? '',
+          displayName: _nameController.text.trim(),
+          provider: 'email',
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,17 +133,28 @@ class _SignupPageState extends State<SignupPage> {
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Pendaftaran dengan Google berhasil!'),
-            backgroundColor: Colors.green,
-          ),
+      if (user != null) {
+        // Simpan data user Google ke Firestore
+        await FirebaseService.saveGoogleUserData(
+          uid: user.uid,
+          email: user.email ?? '',
+          displayName: user.displayName ?? '',
+          photoURL: user.photoURL,
         );
-        // AuthWrapper akan otomatis menangani navigasi
-        Navigator.pop(context);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Pendaftaran dengan Google berhasil!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // AuthWrapper akan otomatis menangani navigasi
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       if (mounted) {

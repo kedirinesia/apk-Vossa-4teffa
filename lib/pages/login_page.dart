@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lottie/lottie.dart';
+import '../services/firebase_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,7 +45,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
@@ -208,17 +209,28 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Login dengan Google berhasil!'),
-            backgroundColor: Colors.green,
-          ),
+      if (user != null) {
+        // Simpan data user Google ke Firestore
+        await FirebaseService.saveGoogleUserData(
+          uid: user.uid,
+          email: user.email ?? '',
+          displayName: user.displayName ?? '',
+          photoURL: user.photoURL,
         );
-        // AuthWrapper akan otomatis menangani navigasi
-        Navigator.pop(context);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Login dengan Google berhasil!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // AuthWrapper akan otomatis menangani navigasi
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       if (mounted) {

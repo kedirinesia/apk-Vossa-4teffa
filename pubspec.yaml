@@ -2,7 +2,7 @@ name: soft_skills_tefa
 description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 2.0.0+1
 
 environment:
   sdk: ^3.9.0
@@ -32,6 +32,8 @@ dependencies:
   open_file: ^3.5.10
   share_plus: ^10.0.2
   http: ^1.1.0
+  yaml: ^3.1.2
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:

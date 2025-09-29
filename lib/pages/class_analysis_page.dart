@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/observer_data.dart';
 import '../services/ai_suggestion_service.dart';
 import 'finish_page.dart';
@@ -115,6 +116,11 @@ class _ClassAnalysisPageState extends State<ClassAnalysisPage> {
     });
 
     try {
+      // Ambil email user yang sedang login
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final userEmail = currentUser?.email ?? 'unknown@example.com';
+      final userUid = currentUser?.uid ?? 'unknown_uid';
+
       // Prepare data for Firestore
       final documentId = '${widget.schoolName}_${widget.classLevel}_${widget.programKeahlian}'
           .replaceAll(' ', '_')
@@ -139,6 +145,11 @@ class _ClassAnalysisPageState extends State<ClassAnalysisPage> {
       
       // Save all data to Firestore
       await docRef.set({
+        // User info
+        'user': {
+          'uid': userUid,
+          'email': userEmail,
+        },
         // Basic info
         'schoolName': widget.schoolName,
         'classLevel': widget.classLevel,

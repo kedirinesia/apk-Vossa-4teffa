@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/firebase_service.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   final String verificationId;
@@ -73,7 +74,22 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         smsCode: _otpController.text,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        // Simpan data user phone ke Firestore (untuk user baru)
+        final existingUser = await FirebaseService.getUserData(user.uid);
+        if (existingUser == null) {
+          // User baru, simpan data
+          await FirebaseService.saveUserData(
+            uid: user.uid,
+            email: user.email ?? '',
+            phoneNumber: widget.phoneNumber,
+            provider: 'phone',
+          );
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

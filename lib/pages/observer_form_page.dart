@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/observer_data.dart';
+import '../widgets/version_display.dart';
 import 'instrument_selection_page.dart';
 
 class ObserverFormPage extends StatefulWidget {
@@ -253,6 +254,12 @@ class _ObserverFormPageState extends State<ObserverFormPage> {
             fit: BoxFit.contain,
           ),
         ),
+      ),
+      
+      // Version display di kiri atas
+      const VersionDisplay(
+        textColor: Colors.blue,
+        fontSize: 12,
       ),
     ],
   ),

@@ -280,16 +280,11 @@ class ClassSummaryPage extends StatelessWidget {
                           },
                           child: const Text('Selanjutnya'),
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.popUntil(context, (route) => route.isFirst);
-                          },
-                          child: const Text('Kembali ke CoverPage'),
-                        ),
                       ],
                     ),
                   ],
                 ),
+              
               ),
             ),
           ],
